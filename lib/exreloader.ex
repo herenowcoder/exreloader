@@ -18,7 +18,7 @@ defmodule ExReloader do
     Sup.OneForOne.new(id: ExReloader.Server.Sup,
                       children: [Sup.Worker.new(id: ExReloader.Server, 
                                                 start_func: {ExReloader.Server, :start_link, [interval]})])
-  end  
+  end
 
   ##
 
@@ -28,7 +28,11 @@ defmodule ExReloader do
 
   def reload(module) do
     :code.purge(module)
-    :code.load_file(module)   
+    :code.load_file(module)
+  end
+
+  def reload_file(file_name) do
+    Code.load_file(file_name)
   end
 
   def all_changed() do
@@ -81,12 +85,13 @@ defmodule ExReloader.Server do
   defp timestamp, do: :erlang.localtime
 
   defp run(from, to) do
-    lc {module, filename} inlist :code.all_loaded, is_list(filename) do
+    lc {_module, filename} inlist :code.all_loaded, is_list(filename) do
       case File.stat(filename) do
         {:ok, File.Stat[mtime: mtime]} when mtime >= from and mtime < to ->
-           ExReloader.reload(module)
+          :error_logger.info_msg "File #{inspect filename} modified. Reloading..."
+          ExReloader.reload_file(list_to_binary(filename))
         {:ok, _} -> :unmodified
-        {:error, enoent} -> :gone
+        {:error, :enoent} -> :gone
         other -> other
       end
     end
