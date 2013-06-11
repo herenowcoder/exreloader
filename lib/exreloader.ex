@@ -27,11 +27,13 @@ defmodule ExReloader do
   end
 
   def reload(module) do
+    :error_logger.error_msg "Reloading module: #{inspect module}"
     :code.purge(module)
     :code.load_file(module)
   end
 
   def reload_file(file_name) do
+    :error_logger.error_msg "Reloading from sources: #{file_name}"
     try do
       Code.load_file(file_name)
     rescue
@@ -90,11 +92,16 @@ defmodule ExReloader.Server do
   defp timestamp, do: :erlang.localtime
 
   defp run(from, to) do
-    lc {_module, filename} inlist :code.all_loaded, is_list(filename) do
+    lc {module, filename} inlist :code.all_loaded, is_list(filename) do
       case File.stat(filename) do
         {:ok, File.Stat[mtime: mtime]} when mtime >= from and mtime < to ->
           :error_logger.info_msg "File #{inspect filename} modified. Reloading..."
-          ExReloader.reload_file(list_to_binary(filename))
+          cond do
+            String.ends_with? filename, ".ex" ->
+              ExReloader.reload_file(list_to_binary(filename))
+            String.ends_with? filename, ".beam" ->
+              ExReloader.reload(module)
+          end
         {:ok, _} -> :unmodified
         {:error, :enoent} -> :gone
         other -> other
