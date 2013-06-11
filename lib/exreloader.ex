@@ -32,7 +32,12 @@ defmodule ExReloader do
   end
 
   def reload_file(file_name) do
-    Code.load_file(file_name)
+    try do
+      Code.load_file(file_name)
+    rescue
+      x in [CompileError] ->
+        :error_logger.error_msg "Compile Error: #{inspect x.message}"
+    end
   end
 
   def all_changed() do
