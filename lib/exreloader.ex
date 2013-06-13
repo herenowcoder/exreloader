@@ -27,13 +27,13 @@ defmodule ExReloader do
   end
 
   def reload(module) do
-    :error_logger.error_msg "Reloading module: #{inspect module}"
+    :error_logger.info_msg "Reloading module: #{inspect module}"
     :code.purge(module)
     :code.load_file(module)
   end
 
   def reload_file(file_name) do
-    :error_logger.error_msg "Reloading from sources: #{file_name}"
+    :error_logger.info_msg "Reloading from sources: #{file_name}"
     try do
       Code.load_file(file_name)
     rescue
