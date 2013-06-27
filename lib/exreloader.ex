@@ -1,4 +1,4 @@
-## 
+##
 ## Inspired by mochiweb's reloader (Copyright 2007 Mochi Media, Inc.)
 ##
 defmodule ExReloader do
@@ -16,7 +16,8 @@ defmodule ExReloader do
   defp sup_tree do
     interval = Application.environment(:exreloader)[:interval] || 1000
     Sup.OneForOne.new(id: ExReloader.Server.Sup,
-                      children: [Sup.Worker.new(id: ExReloader.Server, 
+                      registered: :exreloader_sup,
+                      children: [Sup.Worker.new(id: ExReloader.Server,
                                                 start_func: {ExReloader.Server, :start_link, [interval]})])
   end
 
@@ -72,7 +73,7 @@ defmodule ExReloader.Server do
   alias :gen_server, as: GenServer
 
   def start_link(interval // 1000) do
-    GenServer.start {:local, __MODULE__}, __MODULE__, interval, []
+    GenServer.start {:local, :exreloader_checker}, __MODULE__, interval, []
   end
 
   def init(interval) do
