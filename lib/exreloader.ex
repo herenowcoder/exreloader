@@ -97,7 +97,7 @@ defmodule ExReloader.Server do
       case File.stat(filename) do
         {:ok, File.Stat[mtime: mtime]} when mtime >= from and mtime < to ->
           :error_logger.info_msg "File #{inspect filename} modified. Reloading..."
-          file_name = list_to_binary(filename)
+          {:ok, file_name} = String.from_char_list(filename)
           cond do
             String.ends_with? file_name, ".ex" ->
               ExReloader.reload_file(file_name)
