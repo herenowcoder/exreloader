@@ -103,6 +103,8 @@ defmodule ExReloader.Server do
               ExReloader.reload_file(file_name)
             String.ends_with? file_name, ".beam" ->
               ExReloader.reload(module)
+            true ->
+              :ok
           end
         {:ok, _} -> :unmodified
         {:error, :enoent} -> :gone
