@@ -75,25 +75,25 @@ defmodule ExReloader.Server do
   end
 
   def init(interval) do
-    {:ok, {timestamp, interval}, interval}
+    mod_filter = &(&1 |> to_string =~ %r/^Elixir\.#{Mix.project[:app]}/i)
+    {:ok, {timestamp, interval, mod_filter}, interval}
   end
 
   defcall stop, state: state do
     {:stop, :shutdown, :stopped, state}
   end
 
-  definfo timeout, state: {last, timeout} do
+  definfo timeout, state: {last, timeout, mod_filter} do
     now = timestamp
-    run(last, now)
-    {:noreply, {now, timeout}, timeout}
+    run(last, now, mod_filter)
+    {:noreply, {now, timeout, mod_filter}, timeout}
   end
 
   defp timestamp, do: :erlang.localtime
 
-  defp run(from, to) do
-    appmod_pattern = %r/^Elixir\.#{Mix.project[:app]}/i
+  defp run(from, to, mod_filter) do
     mods = lc {module, filename} inlist :code.all_loaded,
-        (module |> to_string =~ appmod_pattern),
+        mod_filter.(module),
         is_list(filename) do
       case File.stat(filename) do
         {:ok, File.Stat[mtime: mtime]} when mtime >= from and mtime < to ->
