@@ -28,13 +28,11 @@ defmodule ExReloader do
   end
 
   def reload(module) do
-    :error_logger.info_msg "Reloading module: #{inspect module}"
     :code.purge(module)
     :code.load_file(module)
   end
 
   def reload_file(file_name) do
-    :error_logger.info_msg "Reloading from sources: #{file_name}"
     try do
       Code.load_file(file_name)
     rescue
@@ -94,26 +92,30 @@ defmodule ExReloader.Server do
 
   defp run(from, to) do
     appmod_pattern = %r/^Elixir\.#{Mix.project[:app]}/i
-    lc {module, filename} inlist :code.all_loaded,
+    mods = lc {module, filename} inlist :code.all_loaded,
         (module |> to_string =~ appmod_pattern),
         is_list(filename) do
       case File.stat(filename) do
         {:ok, File.Stat[mtime: mtime]} when mtime >= from and mtime < to ->
-          :error_logger.info_msg "File #{inspect filename} modified. Reloading..."
           {:ok, file_name} = String.from_char_list(filename)
           cond do
             String.ends_with? file_name, ".ex" ->
               ExReloader.reload_file(file_name)
+              {:reloaded, module}
             String.ends_with? file_name, ".beam" ->
               ExReloader.reload(module)
+              {:reloaded, module}
             true ->
-              :ok
+              {:not_considered, module}
           end
-        {:ok, _} -> :unmodified
-        {:error, :enoent} -> :gone
+        {:ok, _} -> {:unmodified, module}
+        {:error, :enoent} -> {:gone, module}
         other -> other
       end
     end
+    reloaded = mods |> Enum.filter_map(fn({op,_})-> op==:reloaded end, 
+                        fn({_,mod})-> mod end)
+    if reloaded !== [], do:
+      :error_logger.info_msg "Reloaded modules: #{inspect reloaded}"
   end
-
 end
