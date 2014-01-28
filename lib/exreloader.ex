@@ -6,7 +6,7 @@ defmodule ExReloader do
   alias GenX.Supervisor, as: Sup
 
   def start do
-    :ok = Application.start :exreloader
+    :ok = Application.start :exreloader, :temporary
   end
 
   def start(_, _) do
