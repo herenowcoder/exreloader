@@ -116,6 +116,6 @@ defmodule ExReloader.Server do
     reloaded = mods |> Enum.filter_map(fn({op,_})-> op==:reloaded end, 
                         fn({_,mod})-> mod end)
     if reloaded !== [], do:
-      :error_logger.info_msg "Reloaded modules: #{inspect reloaded}"
+      :error_logger.info_msg "Reloaded modules: #{inspect reloaded}\n"
   end
 end
