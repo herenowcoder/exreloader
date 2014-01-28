@@ -93,7 +93,10 @@ defmodule ExReloader.Server do
   defp timestamp, do: :erlang.localtime
 
   defp run(from, to) do
-    lc {module, filename} inlist :code.all_loaded, is_list(filename) do
+    appmod_pattern = %r/^Elixir\.#{Mix.project[:app]}/i
+    lc {module, filename} inlist :code.all_loaded,
+        (module |> to_string =~ appmod_pattern),
+        is_list(filename) do
       case File.stat(filename) do
         {:ok, File.Stat[mtime: mtime]} when mtime >= from and mtime < to ->
           :error_logger.info_msg "File #{inspect filename} modified. Reloading..."
