@@ -14,6 +14,6 @@ defmodule Exreloader.Mixfile do
   end
 
   defp deps do
-    [{ :genx, github: "yrashk/genx" }]
+    [{ :genx, github: "herenowcoder/genx" }]
   end
 end
